@@ -1,0 +1,13 @@
+{
+  "name": "Trader — Morning Signals",
+  "short_name": "Trader",
+  "description": "Daily EU+US day-trading watchlist with proven technical signals and risk-based position sizing.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0f14",
+  "theme_color": "#0b0f14",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

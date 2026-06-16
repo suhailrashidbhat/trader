@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0f14" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Trader" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<title>Trader — Morning Signals</title>
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121922; --panel2:#0e141c; --line:#1f2a36;
+    --txt:#e8eef5; --mut:#8aa0b5; --buy:#1fd17a; --avoid:#ff5c6c;
+    --neutral:#c9a227; --accent:#3b82f6; --chip:#1a2530;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;padding-bottom:40px}
+  header{position:sticky;top:0;z-index:10;background:rgba(11,15,20,.92);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+    padding:calc(env(safe-area-inset-top) + 12px) 16px 12px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand h1{font-size:18px;margin:0;letter-spacing:.3px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--mut)}
+  .dot.open{background:var(--buy);box-shadow:0 0 8px var(--buy)}
+  .dot.closed{background:var(--avoid)}
+  .sub{color:var(--mut);font-size:12.5px;margin-top:3px;display:flex;gap:10px;flex-wrap:wrap}
+  .wrap{max-width:760px;margin:0 auto;padding:0 14px}
+  .bar{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}
+  button{font:inherit;border:1px solid var(--line);background:var(--panel);
+    color:var(--txt);padding:9px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+  button.primary{background:var(--accent);border-color:var(--accent)}
+  button:active{transform:translateY(1px)}
+  .ghost{background:transparent;color:var(--mut)}
+  .sec-title{display:flex;align-items:center;gap:8px;margin:22px 4px 8px;font-size:13px;
+    text-transform:uppercase;letter-spacing:1px;color:var(--mut)}
+  .sec-title .pill{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--chip)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:13px 14px;margin-bottom:10px}
+  .card.buy{border-left:3px solid var(--buy)}
+  .card.avoid{border-left:3px solid var(--avoid)}
+  .card.neutral{border-left:3px solid var(--neutral)}
+  .row1{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .sym{font-weight:700;font-size:17px}
+  .exch{color:var(--mut);font-size:11px;font-weight:500;margin-left:6px}
+  .px{font-variant-numeric:tabular-nums;font-weight:600}
+  .tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px}
+  .tag.buy{background:rgba(31,209,122,.15);color:var(--buy)}
+  .tag.avoid{background:rgba(255,92,108,.15);color:var(--avoid)}
+  .tag.neutral{background:rgba(201,162,39,.15);color:var(--neutral)}
+  .setup{color:var(--mut);font-size:13px;margin:4px 0 8px}
+  .plan{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 6px}
+  .plan div{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 8px}
+  .plan .k{font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+  .plan .v{font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px;font-size:14px}
+  .plan .v.green{color:var(--buy)} .plan .v.red{color:var(--avoid)}
+  .reasons{font-size:12.5px;color:var(--mut);margin-top:6px}
+  .reasons span{display:inline-block;background:var(--chip);border-radius:6px;
+    padding:2px 7px;margin:3px 4px 0 0}
+  .metrics{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--mut);margin-top:8px;
+    font-variant-numeric:tabular-nums}
+  dialog{border:1px solid var(--line);background:var(--panel);color:var(--txt);
+    border-radius:16px;max-width:520px;width:92%;padding:0}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  .dlg-h{padding:16px 18px;border-bottom:1px solid var(--line);font-weight:700;display:flex;
+    justify-content:space-between;align-items:center}
+  .dlg-b{padding:16px 18px}
+  label{display:block;font-size:12.5px;color:var(--mut);margin:12px 0 5px}
+  input,select,textarea{width:100%;background:var(--panel2);border:1px solid var(--line);
+    color:var(--txt);border-radius:9px;padding:10px;font:inherit}
+  textarea{min-height:90px;resize:vertical;font-size:12.5px}
+  .muted{color:var(--mut);font-size:12px}
+  .progress{height:4px;background:var(--line);border-radius:3px;overflow:hidden;margin:10px 0;display:none}
+  .progress.show{display:block}
+  .progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+  .empty{color:var(--mut);text-align:center;padding:30px 10px;font-size:14px}
+  .disc{font-size:11px;color:var(--mut);line-height:1.5;border-top:1px solid var(--line);
+    margin-top:24px;padding:16px 4px 0}
+  a{color:var(--accent)}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1c2733;
+    border:1px solid var(--line);padding:10px 16px;border-radius:10px;font-size:13px;
+    opacity:0;transition:opacity .3s;pointer-events:none;z-index:50;max-width:90%}
+  .toast.show{opacity:1}
+  .live{display:flex;align-items:center;gap:10px}
+  .live .lpx{font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;min-width:78px;text-align:right}
+  .live .chg{font-size:12px;font-weight:700;min-width:54px}
+  .chg.up{color:var(--buy)} .chg.down{color:var(--avoid)}
+  .gauge{flex:1;height:26px;position:relative;background:var(--panel2);border:1px solid var(--line);
+    border-radius:7px;overflow:hidden}
+  .gauge .seg{position:absolute;top:0;bottom:0}
+  .gauge .mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--txt)}
+  .gauge .lab{position:absolute;top:50%;transform:translateY(-50%);font-size:9.5px;color:var(--mut);padding:0 4px}
+  .lstat{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .lstat.armed{background:var(--chip);color:var(--mut)}
+  .lstat.trig{background:rgba(31,209,122,.16);color:var(--buy)}
+  .lstat.stop{background:rgba(255,92,108,.16);color:var(--avoid)}
+  .lstat.tgt{background:rgba(59,130,246,.18);color:#7fb0ff}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <span id="mktDot" class="dot"></span>
+      <h1>Trader</h1>
+      <span class="muted" style="margin-left:auto" id="dateLbl"></span>
+    </div>
+    <div class="sub" id="statusLine">
+      <span id="mktStatus">—</span>
+      <span id="capLbl"></span>
+      <span id="srcLbl"></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="bar">
+    <button class="primary" id="scanBtn">↻ Run morning scan</button>
+    <button id="liveBtn">▶ Live monitor</button>
+    <button class="ghost" id="settingsBtn">⚙ Settings</button>
+    <button class="ghost" id="notifyBtn">🔔 Alerts</button>
+  </div>
+  <div class="progress" id="prog"><i></i></div>
+
+  <div id="liveWrap" style="display:none">
+    <div class="sec-title">Live monitor
+      <span class="pill" id="liveState">off</span>
+      <span class="muted" id="liveMeta" style="margin-left:auto;font-size:11px"></span>
+    </div>
+    <div id="liveList"></div>
+  </div>
+
+  <div class="sec-title">Buy candidates <span class="pill" id="buyCount">0</span></div>
+  <div id="buyList"></div>
+
+  <div class="sec-title">Avoid / Exit <span class="pill" id="avoidCount">0</span></div>
+  <div id="avoidList"></div>
+
+  <div class="disc" id="disc">
+    <strong>Not financial advice.</strong> This is a personal research tool. Day trading carries a
+    high risk of loss; studies show most active retail traders lose money. Signals are generated
+    from public technical data and can be wrong. You place every order yourself — always use the
+    stop-loss shown, never risk money you can't afford to lose, and verify prices in your broker
+    before trading. Data may be delayed.
+  </div>
+</div>
+
+<!-- Settings dialog -->
+<dialog id="settingsDlg">
+  <div class="dlg-h">Settings <button class="ghost" onclick="document.getElementById('settingsDlg').close()">✕</button></div>
+  <div class="dlg-b">
+    <label>Account capital (€) — used for position sizing</label>
+    <input id="capInput" type="number" inputmode="decimal" placeholder="10000" />
+
+    <label>Risk per trade (%) — moderate = 1%</label>
+    <input id="riskInput" type="number" step="0.25" placeholder="1" />
+
+    <label>Live monitor: poll every (minutes) — keep ≥5 on free API tier</label>
+    <input id="pollInput" type="number" step="1" placeholder="5" />
+
+    <label>Big-mover alert threshold (% intraday move)</label>
+    <input id="moverInput" type="number" step="0.5" placeholder="3" />
+
+    <label>Twelve Data API key — free at twelvedata.com (leave blank for demo data)</label>
+    <input id="keyInput" type="text" placeholder="your_api_key" autocomplete="off" />
+    <div class="muted" style="margin-top:4px">
+      Free tier: 8 calls/min, 800/day — enough for a daily scan. Get one at
+      <a href="https://twelvedata.com/pricing" target="_blank" rel="noopener">twelvedata.com</a>.
+    </div>
+
+    <label>Watchlist universe (one per line: SYMBOL,MIC,Name) — EU+US</label>
+    <textarea id="univInput" spellcheck="false"></textarea>
+    <div class="muted">MIC codes: XNAS/XNYS US · XETR Frankfurt · XPAR Paris · XAMS Amsterdam · XLON London · XMAD Madrid · XMIL Milan</div>
+
+    <div class="bar" style="margin-top:16px">
+      <button class="primary" id="saveSettings">Save</button>
+      <button class="ghost" id="resetUniv">Reset universe</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
